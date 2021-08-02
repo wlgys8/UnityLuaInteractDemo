@@ -73,7 +73,7 @@ Lua.lua_close(L);
 - 加载lua代码到vm中，对应api - [`luaL_loadbuffer`](https://www.lua.org/manual/5.4/manual.html#luaL_loadbuffer)
   - luaL_loadbuffer会同时在栈上压入代码块的指针
 - 执行lua代码，对应api - [`lua_pcall`](https://www.lua.org/manual/5.3/manual.html#lua_pcall)
-  - lua_pcall会从栈上依次弹出{nargs}个数据作为函数参数，再弹出函数执行进行执行，并将结果压入栈
+  - lua_pcall会从栈上依次弹出{nargs}个数据作为函数参数，再弹出函数进行执行，并将结果压入栈
 - 如果lua代码有返回值，那么通过`lua_toXXX`相关api从栈上获取结果
 
 完整的代码如下:
@@ -104,7 +104,7 @@ private bool DoLuaCode(System.IntPtr L,string luaCode){
 return 'hello, i am from lua'
 ```
 
-这段lua代码会执行返回一段字符串，那么利用以上的函数去执行就是:
+这段lua仅仅返回一段字符串，那么利用`DoLuaCode`去执行就是:
 
 ```csharp
 //lua代码
@@ -116,7 +116,7 @@ if(DoLuaCode(L,luaCode)){
 }
 ```
 
-- 由于此处lua返回的是字符串，因此使用`lua_tostring(L,-1)`来将栈顶的元素转为字符串并返回，相应的我们还能看到有`lua_tonumber`,`lua_toboolean`等等.
+- 由于此处lua代码返回的是字符串，因此使用`lua_tostring(L,-1)`来将栈顶的元素转为字符串并返回，相应的我们还能看到有`lua_tonumber`,`lua_toboolean`等等.
 
 
 # 4. c#调用lua全局函数
@@ -186,9 +186,9 @@ static void RegisterCSFunctionGlobal(System.IntPtr L,string funcName,LuaCSFuncti
 
 那么，当我们在lua中执行c#注册的函数时，其交互过程如下:
 
-- Lua会临时分配一个局部栈结构(这里要区分开始通过luaL_newstate创建的全局栈，两者是独立的)
-- Lua会将函数参数压入这个临时栈，然后将栈指针传给LuaCSFunction
-- LuaCSFunction在实现上需要从这个栈中读取lua侧压入的参数，然后执行真正的相关逻辑，并将结果压入栈中
+- LuaVM会临时分配一个局部栈结构(这里要区分开始通过luaL_newstate创建的全局栈，两者是独立的)
+- LuaVM会将lua侧的函数参数压入这个临时栈，然后将栈指针传给LuaCSFunction
+- LuaCSFunction在实现上需要从这个栈中读取lua侧压入的参数，然后执行真正的相关逻辑，并将最终结果压入栈中
 - LuaCSFunction需要返回一个int值，表示往栈中压入了多少个返回值
 - Lua从栈中获取C#侧压入的0/1/多个返回值
 
